@@ -1,0 +1,53 @@
+# .github/workflows/crawl-test.yml
+#
+# 사용법:
+# 1. 이 파일을 레포의 .github/workflows/crawl-test.yml 로 저장
+# 2. crawl_test.py 를 레포 루트(또는 원하는 경로)에 함께 커밋
+# 3. GitHub 저장소 > Actions 탭 > "Crawl Test" > "Run workflow" 클릭
+#    (target_url 입력 후 실행)
+# 4. 실행이 끝나면 Actions 로그에서 결과 요약을 바로 확인 가능
+#    + Artifacts 에서 raw_response.html 다운로드 가능
+
+name: Crawl Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: '테스트할 대상 URL'
+        required: true
+        default: 'https://example.com'
+      timeout:
+        description: '요청 타임아웃(초)'
+        required: false
+        default: '10'
+
+jobs:
+  test-crawl:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 파이썬 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 의존성 설치
+        run: pip install requests
+
+      - name: 크롤링 진단 스크립트 실행
+        run: |
+          python3 crawl_test.py "${{ github.event.inputs.target_url }}" \
+            --timeout "${{ github.event.inputs.timeout }}" \
+            --save raw_response.html
+
+      - name: 결과 HTML 업로드 (Artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crawl-result
+          path: raw_response.html
+          retention-days: 7
