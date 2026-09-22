@@ -1,0 +1,23 @@
+name: Crawl Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: '테스트할 URL'
+        required: true
+        default: 'https://example.com'
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - run: pip install requests
+
+      - run: python3 crawl_test.py "${{ github.event.inputs.target_url }}"
